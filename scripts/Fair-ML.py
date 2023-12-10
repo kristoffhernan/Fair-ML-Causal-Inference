@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+
+
 # In[1]:
+
 
 # import libraries
 import os
@@ -22,6 +25,10 @@ from sklearn.preprocessing import OneHotEncoder
 
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+from utils import FairKModel
+from utils import FairKModelTest
+from utils import FairKModelTest2
 
 
 # In[2]:
@@ -46,7 +53,7 @@ data.head()
 data = data.loc[data['region_first'] != 'PO']
 
 
-# In[4]:
+# In[5]:
 
 
 # keep features used by researchers
@@ -59,14 +66,16 @@ law_data.info()
 # 
 # One Hot Encode the categorical data so it can be used for regression
 
-# In[5]:
+# In[6]:
 
+
+# visualize the distributions for our OHE features
 
 # convert sex to category
 law_data.loc[:,'sex'] = np.where(law_data['sex'] == 1, 'Female', 'Male')
 
 
-# In[6]:
+# In[7]:
 
 
 # split the data first to avoid data leakage
@@ -105,7 +114,7 @@ test_trans = pd.concat([test.drop(ohe_columns, axis=1) ,test_trans], axis=1).res
 test_trans.columns = [col.split('_')[1] if '_' in col else col for col in test_trans.columns]
 
 
-# In[7]:
+# In[8]:
 
 
 # round data to whole numbers to prep it for Poisson (only accepts integers)
@@ -119,7 +128,7 @@ X_test, y_test = torch.tensor(test_trans.drop(['ZFYA'], axis=1).values, dtype=to
 
 # ### Linear Model
 
-# In[8]:
+# In[9]:
 
 
 # object to allow use of dataloader
@@ -136,7 +145,7 @@ class Dataset(torch.utils.data.Dataset):
           return x,y
 
 
-# In[9]:
+# In[10]:
 
 
 # class inherits form a class called nn.Module
@@ -220,7 +229,7 @@ def train(network, train_dataset, test_dataset, file_name_model, n_epochs=10, ba
 
         if validation_score < validation_score_best:
             validation_score_best = validation_score
-            torch.save(network.state_dict(), file_name_model+'.pt') 
+            torch.save(network.state_dict(), os.path.join('../model', file_name_model+'.pt')) 
             
     print(f'Best validation score:{validation_score_best}')
     return validation_scores, train_losses
@@ -230,23 +239,25 @@ def train(network, train_dataset, test_dataset, file_name_model, n_epochs=10, ba
 # 
 # Implements the unfair full model which includes all features
 
-# In[10]:
+# In[12]:
 
 
 # create and train model
+data_dir = '../data'
+model_dir = '../models'
 full_model = LinearRegressionModel(train_trans.shape[1]-1, 1)
-full_model.load_state_dict(torch.load('full_model.pt'))
+full_model.load_state_dict(torch.load(os.path.join(model_dir, 'full_model.pt')))
 # full_validation_scores, full_train_losses = train(full_model, train_trans, test_trans, 'full_model', n_epochs=15, batch_size=20)
 
 
-# In[11]:
+# In[13]:
 
 
 categories = [item for items in ohe_categories for item in items]
 categories
 
 
-# In[12]:
+# In[14]:
 
 
 train_tensor = torch.tensor(train_trans.values, dtype=torch.float32)
@@ -277,7 +288,7 @@ plt.show()
 # 
 # Implements the FTU model 
 
-# In[13]:
+# In[15]:
 
 
 protected_attributes = ['Female', 'Male', 'White', 'Hispanic', 'Asian', 'Black', 'Other', 'Mexican', 'Puertorican', 'Amerindian']
@@ -286,11 +297,11 @@ train_unaware = train_trans.drop(protected_attributes, axis=1)
 test_unaware = test_trans.drop(protected_attributes, axis=1)
 
 unaware_model = LinearRegressionModel(train_unaware.shape[1]-1, 1)
-unaware_model.load_state_dict(torch.load('unaware_model.pt'))
+unaware_model.load_state_dict(torch.load(os.path.join(model_dir,'unaware_model.pt')))
 # unaware_validation_scores, unaware_train_losses = train(unaware_model, train_unaware, test_unaware, 'unaware_model', n_epochs=15, batch_size=20)
 
 
-# In[14]:
+# In[16]:
 
 
 # Look at distribution of FYA on difference races and sex on train set
@@ -314,119 +325,30 @@ ax2.legend()
 plt.show()
 
 
-# ### Fair K
-# 
-# Fair K introduces a background latend variables, K, which are not decendants of protected demographic factors. Information about X is passed to $\hat{Y}$ via $P(K|x,a)$
-# 
-# If we can't calculate P_M(K|x,a) analytically use the following algorithm:
-# 
-# 
-# 
-# START Procedure FAIRLEARNING($D,M$)
-# 
-# 1. For each datapoint $i \in D$, sample $m$ MCMC samples $K_1^{(i)}, \cdots, K_1^{(i)} \sim P_M(K | x^{(i)}, a^{(i)})$
-# 2. Let $D'$ be the augmentd dataset where each ponit $(a^{(i)}, x^{(i)}, y^{(i)})$ in $D$ is replaced with the corresponding $m$ points ${ (a^{(i)}, x^{(i)}, y^{(i)}, k_j^{(i)}) }$
-# 3. $\hat{\theta} \leftarrow argmin_\theta \sum_{i’ \in D’} l(y^{(i’)}, g_\theta(K^{(i’)}, x^{(i’)}_{\ A}))$
-# 
-# END procedure
-# 
-# 
-# To solve 1 of the FAIRLEARNING we can use bayes $P(A|B) = P(B|A)P(A) / P(B)$. 
-# 
-# In our scenario, $P(K∣GPA,LSAT,FYA,Race,Sex)$ is the posterior distribution of $K$. 
-# 
-# $P(GPA,LSAT,FYA∣K,Race,Sex)$ is the likelihood of observing the data given $K$. 
-# 
-# $P(K)$ is the prior distribution of $K$, representing our beliefs about $K$ before observing the data. 
-# 
-# $P(GPA,LSAT,FYA,Race,Sex)$ is the evidence, or the probability of observing the data under all possible values of $K$.
-# 
-# We can then sample from our posterior using MCMC
-# 
-# 
-# 
-# 
-# In the FAIRLEARNING algorithm, the augmented dataset {(a(i),x(i),y(i),uj(i))} includes all these variables, but the key aspect is how they are used. The model g_\theta(U(i),xA(i))typically uses the inferred latent variables U(i) (in this case, K values from K_list_train) and the non-protected attributes A(i)​ to predict the outcome Y. The protected attributes A (like race and sex in your model) are not directly used in the prediction to ensure fairness; instead, their effect is mediated through the latent variables. This approach aims to make predictions based on factors like knowledge while accounting for potential biases in the observed data.
 
-# In[29]:
+# In[38]:
 
 
-def FairKModel(R, S,num_observations, GPA=None, LSAT=None, FYA=None):
-    num_race_cats = len(law_data['race'].unique())
-    num_sex_cats = len(law_data['sex'].unique())    
-
-    # 0,1 vectors for the normal distribution
-    # R and S are matrices
-    r0_vec = torch.zeros(num_race_cats)
-    s0_vec = torch.zeros(num_sex_cats)
-    r1_vec = torch.ones(num_race_cats)
-    s1_vec = torch.ones(num_sex_cats)
-
-    # prior latent variable 'K' (knowledge)
-    K = pyro.sample('K', dist.Normal(torch.tensor(0.), torch.tensor(1.)))
-
-    # priors for weights and baselines for GPA, LSAT and FYA
-    # GPA ~ N(b_G  + w_G^K K + w_G^R R + w_G^S S, \sigma_G)
-    b_G = pyro.sample('b_G', dist.Normal(torch.tensor(0.), torch.tensor(1.)))
-    w_G_K = pyro.sample('w_G_K', dist.Normal(torch.tensor(0.), torch.tensor(1.)))
-    w_G_R = pyro.sample('w_G_R', dist.Normal(r0_vec,r1_vec)) # outputs a vec of normals of len(race)
-    w_G_S = pyro.sample('w_G_S', dist.Normal(s0_vec,s1_vec)) # outputs a vec of normals of len(sex)
-    sigma_G_sq = pyro.sample('sigma_G_sq', dist.InverseGamma(torch.tensor(1.), torch.tensor(1.)))
-
-    # LSAT ~ Poisson(exp( b_L +w_L^K K + w_L^R R + w_L^S S))
-    b_L = pyro.sample('b_L', dist.Normal(torch.tensor(0.), torch.tensor(1.)))
-    w_L_K = pyro.sample('w_L_K', dist.Normal(torch.tensor(0.), torch.tensor(1.)))
-    w_L_R = pyro.sample('w_L_R', dist.Normal(r0_vec,r1_vec))
-    w_L_S = pyro.sample('w_L_S', dist.Normal(s0_vec,s1_vec))
-
-    # FYA ~ N(w_F^K K + w_F^R R + w_F^S S, 1)
-    w_F_K = pyro.sample('w_F_K', dist.Normal(torch.tensor(0.), torch.tensor(1.)))
-    w_F_R = pyro.sample('w_F_R', dist.Normal(r0_vec,r1_vec))
-    w_F_S = pyro.sample('w_F_S', dist.Normal(s0_vec,s1_vec))
-
-    # Calculate the parameters values of the data generating distributions
-    # print(len(b_G))
-    # print(len(w_G_K * K))
-    # print((torch.matmul(w_G_R, R.transpose(0,1))).shape)
-    # # w 1 x num_col_race
-    # # R len_race x num_col_race
-    # print((torch.matmul(w_G_S, S)).shape)
-
-    mu_G = b_G + w_G_K * K + torch.matmul(R, w_G_R) + torch.matmul(S, w_G_S)
-    lambda_L = b_L + w_L_K * K + torch.matmul(R, w_L_R) + torch.matmul(S, w_L_S)
-    mu_F = w_F_K * K + torch.matmul(R, w_F_R) + torch.matmul(S, w_F_S)
-
-    # sample observed data
-    # pyro.plate is to denote independent observations and for vectorized computation
-    # use if dealing with multiple observations
-    # num_observations ensures models LH calculations are performed across all datapoints
-    with pyro.plate('data', num_observations):
-        # gives likelihood of observed data given model parameters
-        gpa = pyro.sample('gpa', dist.Normal(mu_G, torch.sqrt(sigma_G_sq)), obs=GPA) # dist.Normal takes mean, sd (not variance)
-        lsat = pyro.sample('lsat', dist.Poisson(lambda_L.exp()), obs=LSAT) # obs is observed
-        fya = pyro.sample('fya', dist.Normal(mu_F, torch.tensor(1.)), obs=FYA)
-
-    return gpa, lsat, fya
+from utils import FairKModel
 
 
-# In[30]:
+# In[39]:
 
 
 # structure of FairKModel
 # generates a DAG of the model, showing how different rvs are related to each other within the model
 model_graph = pyro.render_model(
     FairKModel, 
-    model_args=(train_tensor[:,5:], train_tensor[:,3:5], train_tensor.shape[0], train_tensor[:,1], train_tensor[:,0], train_tensor[:,2]),
+    model_args=(train_tensor[:,5:], train_tensor[:,3:5], train_tensor.shape[0], 
+                law_data, train_tensor[:,1], train_tensor[:,0], train_tensor[:,2]),
     render_distributions=True, 
     render_params=True
     )
 model_graph
 
 
-# In[32]:
+# In[40]:
 
-
-from tqdm.notebook import tqdm
 
 values_reestimate = ['b_G', 'w_G_R', 'w_G_S', 'w_G_K', 'sigma_G_sq', 'b_L', 'w_L_R', 'w_L_S', 'w_L_K']
 
@@ -451,7 +373,7 @@ for i in tqdm(range(train_tensor.shape[0])):
         importance = pyro.infer.Importance(conditioned_model, num_samples=100)
 
         # executes the mcmc process
-        sampling_results = importance.run(R=train_tensor[:,5:], S=train_tensor[:,3:5], num_observations=train_tensor.shape[0]) # samples from P_M(U | x^{(i)}, a^{(i)})
+        sampling_results = importance.run(R=train_tensor[:,5:], S=train_tensor[:,3:5], num_observations=train_tensor.shape[0], law_data=law_data) # samples from P_M(U | x^{(i)}, a^{(i)})
 
         # Extract weighted samples and calculate metrics
         weighted_samples = importance.exec_traces
@@ -468,7 +390,7 @@ for i in tqdm(range(train_tensor.shape[0])):
         metrics_train['ESS_values'].append(importance.get_ESS())
         metrics_train['normalized_weights'].append(importance.get_normalized_weights())
 
-with open('inferred_K_train_100.pkl', 'wb') as f:
+with open(os.path.join(data_dir,'inferred_K_train_100.pkl'), 'wb') as f:
     pickle.dump({'K_values': K_list_train, 'parameters': reestimated_params, 'metrics': metrics_train}, f)
 
 
@@ -478,74 +400,8 @@ with open('inferred_K_train_100.pkl', 'wb') as f:
 
 # We create a new model so that we can estimate some parameters from the training data and use them in the test phase. This is done to capture dataset-specific nuances. We want to leverage information learned from the training data in the test phase to ensure we account for potential overfitting or biased estimates which may happen when reusing model parameters from the train. 
 
-# In[33]:
-
-
-def FairKModelTest(R, S, num_observations, GPA=None, LSAT=None, FYA=None):
-    num_race_cats = len(law_data['race'].unique())
-    num_sex_cats = len(law_data['sex'].unique())    
-
-    # 0,1 vectors for the normal distribution
-    # R and S are matrices
-    r0_vec = torch.zeros(num_race_cats)
-    s0_vec = torch.zeros(num_sex_cats)
-    r1_vec = torch.ones(num_race_cats)
-    s1_vec = torch.ones(num_sex_cats)
-
-    # prior latent variable 'K' (knowledge)
-    K = pyro.sample('K', dist.Normal(torch.tensor(0.), torch.tensor(1.)))
-
-    # priors for weights and baselines for GPA, LSAT and FYA
-    # GPA ~ N(b_G  + w_G^K K + w_G^R R + w_G^S S, \sigma_G)
-    b_G = torch.stack(reestimated_params['b_G']).mean()
-    w_G_K = torch.stack(reestimated_params['w_G_K']).mean()
-    w_G_R = torch.stack(reestimated_params['w_G_R']).mean(0)
-    w_G_S = torch.stack(reestimated_params['w_G_S']).mean(0)
-    sigma_G_sq = torch.stack(reestimated_params['sigma_G_sq']).mean()
-
-    # LSAT ~ Poisson(exp( b_L +w_L^K K + w_L^R R + w_L^S S))
-    b_L =torch.stack( reestimated_params['b_L']).mean()
-    w_L_K = torch.stack(reestimated_params['w_L_K']).mean()
-    w_L_R = torch.stack(reestimated_params['w_L_R']).mean(0)
-    w_L_S = torch.stack(reestimated_params['w_L_S']).mean(0)
-
-    # FYA ~ N(w_F^K K + w_F^R R + w_F^S S, 1)
-    w_F_K = pyro.sample('w_F_K', dist.Normal(torch.tensor(0.), torch.tensor(1.)))
-    w_F_R = pyro.sample('w_F_R', dist.Normal(r0_vec,r1_vec))
-    w_F_S = pyro.sample('w_F_S', dist.Normal(s0_vec,s1_vec))
-
-    # Calculate the parameters values of the data generating distributions
-    # print(len(b_G))
-    # print(len(w_G_K * K))
-    # print((torch.matmul(w_G_R, R.transpose(0,1))).shape)
-    # # w 1 x num_col_race
-    # # R len_race x num_col_race
-    # produces 1 x len_race
-    # print((torch.matmul(w_G_S, S.transpose(0,1))).shape)
-    # print(b_G.shape)
-    # print((w_G_K * K).shape)
-
-    mu_G = b_G + w_G_K * K + torch.matmul(R, w_G_R) + torch.matmul(S, w_G_S)
-    lambda_L = b_L + w_L_K * K + torch.matmul(R, w_L_R) + torch.matmul(S, w_L_S)
-    mu_F = w_F_K * K + torch.matmul(R, w_F_R) + torch.matmul(S, w_F_S)
-
-    # sample observed data
-    # pyro.plate is to denote independent observations and for vectorized computation
-    # use if dealing with multiple observations
-    # num_observations ensures models LH calculations are performed across all datapoints
-    with pyro.plate('data', num_observations):
-        # gives likelihood of observed data given model parameters
-        gpa = pyro.sample('gpa', dist.Normal(mu_G, torch.sqrt(sigma_G_sq)), obs=GPA) # obs is observed
-        lsat = pyro.sample('lsat', dist.Poisson(lambda_L.exp()), obs=LSAT)
-        fya = pyro.sample('fya', dist.Normal(mu_F, torch.tensor(1.)), obs=FYA)
-
-    return gpa, lsat, fya
-
-
 # In[34]:
 
-
-from tqdm.notebook import tqdm
 
 K_list_test = []
 metrics_test = {'ESS_values':[], 'normalized_weights':[]}
@@ -561,7 +417,7 @@ for i in tqdm(range(test_tensor.shape[0])):
         importance = pyro.infer.Importance(conditioned_model, num_samples=100)
 
         # executes the mcmc process
-        sampling_results = importance.run(R=test_tensor[:,5:], S=test_tensor[:,3:5], num_observations=test_tensor.shape[0]) # samples from P_M(U | x^{(i)}, a^{(i)})
+        sampling_results = importance.run(R=test_tensor[:,5:], S=test_tensor[:,3:5], num_observations=test_tensor.shape[0], law_data=law_data, reestimated_params=reestimated_params) # samples from P_M(U | x^{(i)}, a^{(i)})
                 
         # obtains distribution of sampled values for K
         marginal = pyro.infer.EmpiricalMarginal(importance, sites="K")
@@ -571,50 +427,12 @@ for i in tqdm(range(test_tensor.shape[0])):
         metrics_test['ESS_values'].append(importance.get_ESS())
         metrics_test['normalized_weights'].append(importance.get_normalized_weights())
 
-with open('inferred_K_test_100.pkl', 'wb') as f:
+with open(os.path.join(data_dir,'inferred_K_test_100.pkl'), 'wb') as f:
     pickle.dump({'K_values': K_list_test, 'metrics': metrics_test}, f)
-
-
-# In[35]:
-
-
-def FairKModelTest2(R, S, num_observations, GPA=None, LSAT=None, FYA=None):
-    # prior latent variable 'K' (knowledge)
-    K = pyro.sample('K', dist.Normal(torch.tensor(0.), torch.tensor(1.)))
-
-    # priors for weights and baselines for GPA, LSAT and FYA
-    # GPA ~ N(b_G  + w_G^K K + w_G^R R + w_G^S S, \sigma_G)
-    b_G = torch.stack(reestimated_params['b_G']).mean()
-    w_G_K = torch.stack(reestimated_params['w_G_K']).mean()
-    w_G_R = torch.stack(reestimated_params['w_G_R']).mean(0)
-    w_G_S = torch.stack(reestimated_params['w_G_S']).mean(0)
-    sigma_G_sq = torch.stack(reestimated_params['sigma_G_sq']).mean()
-
-    # LSAT ~ Poisson(exp( b_L +w_L^K K + w_L^R R + w_L^S S))
-    b_L =torch.stack( reestimated_params['b_L']).mean()
-    w_L_K = torch.stack(reestimated_params['w_L_K']).mean()
-    w_L_R = torch.stack(reestimated_params['w_L_R']).mean(0)
-    w_L_S = torch.stack(reestimated_params['w_L_S']).mean(0)
-
-    mu_G = b_G + w_G_K * K + torch.matmul(R, w_G_R) + torch.matmul(S, w_G_S)
-    lambda_L = b_L + w_L_K * K + torch.matmul(R, w_L_R) + torch.matmul(S, w_L_S)
-
-    # sample observed data
-    # pyro.plate is to denote independent observations and for vectorized computation
-    # use if dealing with multiple observations
-    # num_observations ensures models LH calculations are performed across all datapoints
-    with pyro.plate('data', num_observations):
-        # gives likelihood of observed data given model parameters
-        gpa = pyro.sample('gpa', dist.Normal(mu_G, torch.sqrt(sigma_G_sq)), obs=GPA) # obs is observed
-        lsat = pyro.sample('lsat', dist.Poisson(lambda_L.exp()), obs=LSAT)
-
-    return gpa, lsat
 
 
 # In[20]:
 
-
-from tqdm.notebook import tqdm
 
 K_list_test = []
 metrics_test = {'ESS_values':[], 'normalized_weights':[]}
@@ -631,7 +449,7 @@ for i in tqdm(range(test_tensor.shape[0])):
         importance = pyro.infer.Importance(conditioned_model, num_samples=100)
 
         # executes the mcmc process
-        sampling_results = importance.run(R=test_tensor[:,5:], S=test_tensor[:,3:5], num_observations=test_tensor.shape[0]) # samples from P_M(U | x^{(i)}, a^{(i)})
+        sampling_results = importance.run(R=test_tensor[:,5:], S=test_tensor[:,3:5], num_observations=test_tensor.shape[0], reestimated_params=reestimated_params) # samples from P_M(U | x^{(i)}, a^{(i)})
                 
         # obtains distribution of sampled values for K
         marginal = pyro.infer.EmpiricalMarginal(importance, sites="K")
@@ -641,6 +459,6 @@ for i in tqdm(range(test_tensor.shape[0])):
         metrics_test['ESS_values'].append(importance.get_ESS())
         metrics_test['normalized_weights'].append(importance.get_normalized_weights())
 
-with open('inferred_K_test_100_nofya.pkl', 'wb') as f:
+with open(os.path.join(data_dir,'inferred_K_test_100_nofya.pkl'), 'wb') as f:
     pickle.dump({'K_values': K_list_test, 'metrics': metrics_test}, f)
 
