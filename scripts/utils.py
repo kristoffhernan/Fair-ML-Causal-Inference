@@ -40,14 +40,15 @@ def FairKModel(R, S, num_observations, law_data, GPA=None, LSAT=None, FYA=None):
     # Calculate the parameters values of the data generating distributions
     # print(len(b_G))
     # print(len(w_G_K * K))
+    # print(w_G_R.shape, R.shape)
     # print((torch.matmul(w_G_R, R.transpose(0,1))).shape)
     # # w 1 x num_col_race
     # # R len_race x num_col_race
     # print((torch.matmul(w_G_S, S)).shape)
 
-    mu_G = b_G + w_G_K * K + torch.matmul(R, w_G_R) + torch.matmul(S, w_G_S)
-    lambda_L = b_L + w_L_K * K + torch.matmul(R, w_L_R) + torch.matmul(S, w_L_S)
-    mu_F = w_F_K * K + torch.matmul(R, w_F_R) + torch.matmul(S, w_F_S)
+    mu_G = b_G + w_G_K * K + torch.matmul(w_G_R, R.transpose(0,1)) + torch.matmul(w_G_S, S.transpose(0,1))
+    lambda_L = b_L + w_L_K * K + torch.matmul(w_L_R, R.transpose(0,1)) + torch.matmul(w_L_S, S.transpose(0,1))
+    mu_F = w_F_K * K + torch.matmul(w_F_R, R.transpose(0,1)) + torch.matmul(w_F_S, S.transpose(0,1))
 
     # sample observed data
     # pyro.plate is to denote independent observations and for vectorized computation
@@ -98,19 +99,9 @@ def FairKModelTest(R, S, num_observations, law_data, reestimated_params, GPA=Non
     w_F_S = pyro.sample('w_F_S', dist.Normal(s0_vec,s1_vec))
 
     # Calculate the parameters values of the data generating distributions
-    # print(len(b_G))
-    # print(len(w_G_K * K))
-    # print((torch.matmul(w_G_R, R.transpose(0,1))).shape)
-    # # w 1 x num_col_race
-    # # R len_race x num_col_race
-    # produces 1 x len_race
-    # print((torch.matmul(w_G_S, S.transpose(0,1))).shape)
-    # print(b_G.shape)
-    # print((w_G_K * K).shape)
-
-    mu_G = b_G + w_G_K * K + torch.matmul(R, w_G_R) + torch.matmul(S, w_G_S)
-    lambda_L = b_L + w_L_K * K + torch.matmul(R, w_L_R) + torch.matmul(S, w_L_S)
-    mu_F = w_F_K * K + torch.matmul(R, w_F_R) + torch.matmul(S, w_F_S)
+    mu_G = b_G + w_G_K * K + torch.matmul(w_G_R, R.transpose(0,1)) + torch.matmul(w_G_S, S.transpose(0,1))
+    lambda_L = b_L + w_L_K * K + torch.matmul(w_L_R, R.transpose(0,1)) + torch.matmul(w_L_S, S.transpose(0,1))
+    mu_F = w_F_K * K + torch.matmul(w_F_R, R.transpose(0,1)) + torch.matmul(w_F_S, S.transpose(0,1))
 
     # sample observed data
     # pyro.plate is to denote independent observations and for vectorized computation
@@ -147,8 +138,8 @@ def FairKModelTest2(R, S, num_observations, reestimated_params, GPA=None, LSAT=N
     w_L_R = torch.stack(reestimated_params['w_L_R']).mean(0)
     w_L_S = torch.stack(reestimated_params['w_L_S']).mean(0)
 
-    mu_G = b_G + w_G_K * K + torch.matmul(R, w_G_R) + torch.matmul(S, w_G_S)
-    lambda_L = b_L + w_L_K * K + torch.matmul(R, w_L_R) + torch.matmul(S, w_L_S)
+    mu_G = b_G + w_G_K * K + torch.matmul(w_G_R, R.transpose(0,1)) + torch.matmul(w_G_S, S.transpose(0,1))
+    lambda_L = b_L + w_L_K * K + torch.matmul(w_L_R, R.transpose(0,1)) + torch.matmul(w_L_S, S.transpose(0,1))
 
     # sample observed data
     # pyro.plate is to denote independent observations and for vectorized computation

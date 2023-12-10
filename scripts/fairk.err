@@ -1,9 +1,8 @@
-/var/lib/slurm-llnl/slurmd/job332213/slurm_script: line 23: fg: no job control
-/var/lib/slurm-llnl/slurmd/job332213/slurm_script: line 24: fg: no job control
-/var/lib/slurm-llnl/slurmd/job332213/slurm_script: line 25: fg: no job control
-/var/lib/slurm-llnl/slurmd/job332213/slurm_script: line 26: fg: no job control
-/var/lib/slurm-llnl/slurmd/job332213/slurm_script: line 28: module: command not found
-Matplotlib is building the font cache; this may take a moment.
+/var/lib/slurm-llnl/slurmd/job332326/slurm_script: line 22: fg: no job control
+/var/lib/slurm-llnl/slurmd/job332326/slurm_script: line 23: fg: no job control
+/var/lib/slurm-llnl/slurmd/job332326/slurm_script: line 24: fg: no job control
+/var/lib/slurm-llnl/slurmd/job332326/slurm_script: line 25: fg: no job control
+/var/lib/slurm-llnl/slurmd/job332326/slurm_script: line 27: module: command not found
 /accounts/grad/khern045/.local/lib/python3.11/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
   warnings.warn(
 /accounts/grad/khern045/.local/lib/python3.11/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
