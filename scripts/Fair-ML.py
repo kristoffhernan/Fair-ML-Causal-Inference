@@ -229,7 +229,7 @@ def train(network, train_dataset, test_dataset, file_name_model, n_epochs=10, ba
 
         if validation_score < validation_score_best:
             validation_score_best = validation_score
-            torch.save(network.state_dict(), os.path.join('../model', file_name_model+'.pt')) 
+            torch.save(network.state_dict(), os.path.join('../models', file_name_model+'.pt')) 
             
     print(f'Best validation score:{validation_score_best}')
     return validation_scores, train_losses
