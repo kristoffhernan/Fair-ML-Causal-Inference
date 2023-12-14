@@ -1,8 +1,0 @@
-/var/lib/slurm-llnl/slurmd/job333049/slurm_script: line 30: module: command not found
-/usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.2
-  warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
-/accounts/grad/khern045/.local/lib/python3.10/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/accounts/grad/khern045/.local/lib/python3.10/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-  0%|          | 0/4358 [00:00<?, ?it/s]
