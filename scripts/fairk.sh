@@ -19,7 +19,7 @@
 # Command(s) to run
 ###################
 
-%pip install pyro
+%pip install pyro-ppl
 %pip install scikit-learn
 %pip install tqdm
 %pip install seaborn
