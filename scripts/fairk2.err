@@ -9,3 +9,4 @@ Matplotlib is building the font cache; this may take a moment.
   warnings.warn(
 /accounts/grad/khern045/.local/lib/python3.11/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
   warnings.warn(
+slurmstepd-scf-sm11: error: *** JOB 332404 ON scf-sm11 CANCELLED AT 2023-12-14T09:33:17 ***
