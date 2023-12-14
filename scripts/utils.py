@@ -5,7 +5,7 @@ import pyro.distributions as dist
 import matplotlib.pyplot as plt
 import seaborn as sns 
 
-def plot_pred_distribution(model, original_df, X, title):
+def plot_pred_distribution(model, original_df, X, title, caption):
     ohe_categories = [['Female', 'Male'],
                         ['White',
                         'Hispanic',
@@ -38,6 +38,8 @@ def plot_pred_distribution(model, original_df, X, title):
     ax2.legend()
     ax2.set_title('Distribution of $\widehat{FYA}$ by Race')  # Title for the second subplot
     ax2.set_xlabel('$\widehat{FYA}$')  # LaTeX label for the x-axis
+
+    fig.text(0.5, -0.05, caption, ha='center', va='center')
 
     plt.tight_layout()  # Adjust the layout
     plt.show()
