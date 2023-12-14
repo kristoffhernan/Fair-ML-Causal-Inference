@@ -4,11 +4,11 @@
 # SBATCH OPTIONS
 ################
 
-#SBATCH --job-name=fairk2 # job name for queue (optional)
+#SBATCH --job-name=fairk # job name for queue (optional)
 #SBATCH --partition=low    # partition (optional, default=low) 
-#SBATCH --error=fairk2.err     # file for stderr (optional)
-#SBATCH --output=fairk2.out    # file for stdout (optional)
-#SBATCH --time=4-24:00:00    # max runtime of job hours:minutes:seconds
+#SBATCH --error=fairk.err     # file for stderr (optional)
+#SBATCH --output=fairk.out    # file for stdout (optional)
+#SBATCH --time=2-24:00:00    # max runtime of job hours:minutes:seconds
 #SBATCH --nodes=1          # use 1 node
 #SBATCH --ntasks=1         # use 1 task
 #SBATCH --cpus-per-task=1  # use 1 CPU core
@@ -21,4 +21,4 @@
 
 module load python
 
-python -u Fair-ML2.py > Fair-ML2.out
+python -u Fair-ML.py > Fair-ML.out

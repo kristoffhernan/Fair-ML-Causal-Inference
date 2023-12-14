@@ -4,11 +4,11 @@
 # SBATCH OPTIONS
 ################
 
-#SBATCH --job-name=fairk # job name for queue (optional)
+#SBATCH --job-name=fairk_test # job name for queue (optional)
 #SBATCH --partition=low    # partition (optional, default=low) 
-#SBATCH --error=fairk.err     # file for stderr (optional)
-#SBATCH --output=fairk.out    # file for stdout (optional)
-#SBATCH --time=2-24:00:00    # max runtime of job hours:minutes:seconds
+#SBATCH --error=fairk_test.err     # file for stderr (optional)
+#SBATCH --output=fairk_test.out    # file for stdout (optional)
+#SBATCH --time=4-24:00:00    # max runtime of job hours:minutes:seconds
 #SBATCH --nodes=1          # use 1 node
 #SBATCH --ntasks=1         # use 1 task
 #SBATCH --cpus-per-task=1  # use 1 CPU core
@@ -19,11 +19,6 @@
 # Command(s) to run
 ###################
 
-%pip install pyro-ppl
-%pip install scikit-learn
-%pip install tqdm
-%pip install seaborn
-
 module load python
 
-python -u Fair-ML.py > Fair-ML.out
+python -u gen_K_test.py > gen_K_test.out

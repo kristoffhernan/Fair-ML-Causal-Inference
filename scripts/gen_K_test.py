@@ -320,38 +320,6 @@ for i in tqdm(range(test_tensor.shape[0])):
         metrics_test['ESS_values'].append(importance.get_ESS())
         metrics_test['normalized_weights'].append(importance.get_normalized_weights())
 
-with open(os.path.join(data_dir,'inferred_K_test_100_2.pkl'), 'wb') as f:
-    pickle.dump({'K_values': K_list_test, 'metrics': metrics_test}, f)
-
-
-# In[20]:
-
-
-K_list_test = []
-metrics_test = {'ESS_values':[], 'normalized_weights':[]}
-
-for i in tqdm(range(test_tensor.shape[0])):
-        # P(GPA,LSAT,FYA∣K,Race,Sex), so gpa, lsat and fya conditioned on observed data from train_tensor
-        conditioned_model = pyro.condition(FairKModelTest2, data={
-                'gpa': test_tensor[i, 1], 
-                'lsat': test_tensor[i, 0].type(torch.int32), 
-                }
-                )
-
-        # Imporance sampling
-        importance = pyro.infer.Importance(conditioned_model, num_samples=100)
-
-        # executes the mcmc process
-        sampling_results = importance.run(R=test_tensor[:,5:], S=test_tensor[:,3:5], num_observations=test_tensor.shape[0], reestimated_params=reestimated_params) # samples from P_M(U | x^{(i)}, a^{(i)})
-                
-        # obtains distribution of sampled values for K
-        marginal = pyro.infer.EmpiricalMarginal(importance, sites="K")
-        K_list_test.append(marginal.mean)
-
-        # collect metrics
-        metrics_test['ESS_values'].append(importance.get_ESS())
-        metrics_test['normalized_weights'].append(importance.get_normalized_weights())
-
-with open(os.path.join(data_dir,'inferred_K_test_100_nofya_2.pkl'), 'wb') as f:
+with open(os.path.join(data_dir,'inferred_K_test_100.pkl'), 'wb') as f:
     pickle.dump({'K_values': K_list_test, 'metrics': metrics_test}, f)
 
