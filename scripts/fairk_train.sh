@@ -4,10 +4,10 @@
 # SBATCH OPTIONS
 ################
 
-#SBATCH --job-name=fairk # job name for queue (optional)
+#SBATCH --job-name=fairk_train # job name for queue (optional)
 #SBATCH --partition=low    # partition (optional, default=low) 
-#SBATCH --error=fairk.err     # file for stderr (optional)
-#SBATCH --output=fairk.out    # file for stdout (optional)
+#SBATCH --error=fairk_train.err     # file for stderr (optional)
+#SBATCH --output=fairk_train.out    # file for stdout (optional)
 #SBATCH --time=2-24:00:00    # max runtime of job hours:minutes:seconds
 #SBATCH --nodes=1          # use 1 node
 #SBATCH --ntasks=1         # use 1 task
@@ -21,4 +21,4 @@
 
 module load python
 
-python -u Fair-ML.py > Fair-ML.out
+python -u gen_K_train.py > gen_K_train.out
