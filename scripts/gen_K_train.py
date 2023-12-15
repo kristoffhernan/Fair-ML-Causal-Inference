@@ -9,7 +9,7 @@
 # import libraries
 import os
 import pickle
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 import numpy as np
 import pandas as pd

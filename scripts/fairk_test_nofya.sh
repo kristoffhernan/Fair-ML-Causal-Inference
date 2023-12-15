@@ -4,10 +4,10 @@
 # SBATCH OPTIONS
 ################
 
-#SBATCH --job-name=fairk3 # job name for queue (optional)
+#SBATCH --job-name=fairk_test_nofya # job name for queue (optional)
 #SBATCH --partition=low    # partition (optional, default=low) 
-#SBATCH --error=fairk3.err     # file for stderr (optional)
-#SBATCH --output=fairk3.out    # file for stdout (optional)
+#SBATCH --error=fairk_test_nofya.err     # file for stderr (optional)
+#SBATCH --output=fairk_test_nofya.out    # file for stdout (optional)
 #SBATCH --time=4-24:00:00    # max runtime of job hours:minutes:seconds
 #SBATCH --nodes=1          # use 1 node
 #SBATCH --ntasks=1         # use 1 task
@@ -21,4 +21,4 @@
 
 module load python
 
-python -u Fair-ML3.py > Fair-ML3.out
+python -u gen_K_test_nofya.py > gen_K_test_nofya.out

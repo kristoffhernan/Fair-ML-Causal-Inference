@@ -2,6 +2,49 @@
 import torch
 import pyro
 import pyro.distributions as dist
+import matplotlib.pyplot as plt
+import seaborn as sns 
+
+def plot_pred_distribution(model, original_df, X, title, caption):
+    ohe_categories = [['Female', 'Male'],
+                        ['White',
+                        'Hispanic',
+                        'Asian',
+                        'Black',
+                        'Other',
+                        'Mexican',
+                        'Puertorican',
+                        'Amerindian']]
+    
+    # Look at distribution of FYA on difference races and sex on train set
+    fit = original_df.copy()
+    fit['FYA'] = model(X).detach().numpy()
+
+    fig, (ax1, ax2) = plt.subplots(2)
+    fig.set_size_inches(9, 6)
+    fig.suptitle(title, fontsize=16)
+
+    for column in ohe_categories[0]:
+        data_filtered = fit[fit[column]==1]
+        sns.kdeplot(data=data_filtered, x='FYA', label=column, ax=ax1)
+    ax1.legend()
+    ax1.set_title('Distribution of $\widehat{FYA}$ by Sex')  # Title for the first subplot
+    ax1.set_xlabel('$\widehat{FYA}$')  # LaTeX label for the x-axis
+
+    for column in ohe_categories[1]:
+        data_filtered = fit[fit[column]==1]
+        sns.kdeplot(data=data_filtered, x='FYA', label=column, ax=ax2)
+
+    ax2.legend()
+    ax2.set_title('Distribution of $\widehat{FYA}$ by Race')  # Title for the second subplot
+    ax2.set_xlabel('$\widehat{FYA}$')  # LaTeX label for the x-axis
+
+    fig.text(0.5, -0.05, caption, ha='center', va='center')
+
+    plt.tight_layout()  # Adjust the layout
+    plt.show()
+
+
 
 
 def FairKModel(R, S, num_observations, law_data, GPA=None, LSAT=None, FYA=None):
@@ -110,6 +153,8 @@ def FairKModelTest(R, S, num_observations, law_data, reestimated_params, GPA=Non
     with pyro.plate('data', num_observations):
         # gives likelihood of observed data given model parameters
         gpa = pyro.sample('gpa', dist.Normal(mu_G, torch.sqrt(sigma_G_sq)), obs=GPA) # obs is observed
+        # model is generating GPA values based on the normal dist with mean mu_G (which is a functino of both latent and obsevabel variables as per the structural equation) and observed GPA data. The aim is to estimate the pure effect of these free from historical biases embedded in the raw data
+        # structural equations are part of the causal model as adjusted from Pearl: define how each observable variable is generated from its parent and latent factors. 
         lsat = pyro.sample('lsat', dist.Poisson(lambda_L.exp()), obs=LSAT)
         fya = pyro.sample('fya', dist.Normal(mu_F, torch.tensor(1.)), obs=FYA)
 
