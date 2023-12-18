@@ -1,6 +1,6 @@
 # Fair Machine Learning Using Causal Inference
 
-This repository is a replication and exploration of the paper "Counterfactual Fairness" by Kusner et al. The original paper presents a new framework for assessing and ensuring fairness in predictive model. It does this though imposing fairness assumptions and utilizing Pearls causal modeling [framework](http://bayes.cs.ucla.edu/BOOK-2K/neuberg-review.pdf). 
+This repository is a replication and exploration of the [paper](https://arxiv.org/abs/1703.06856) "Counterfactual Fairness" by Kusner et al. The original paper presents a new framework for assessing and ensuring fairness in predictive model. It does this though imposing fairness assumptions and utilizing Pearls causal modeling [framework](http://bayes.cs.ucla.edu/BOOK-2K/neuberg-review.pdf). 
 
 ## Objective
 Our primary aim was to understand the concepts of counterfactual fairness and its application in predicting law school success. We demonstrated various modeling techniques to demonstrate the contrast between fair and unfair predictive models. 
@@ -34,12 +34,12 @@ Our replication was able to successfully reproduce the original papers RMSE scor
 
 
 
-| ------------- | Full     | Unaware  | Fair K   | Fair Add |
+|               | Full     | Unaware  | Fair K   | Fair Add |
 | ------------- | -------- | -------- | -------- | -------- |
 | Original Paper| 0.873    | 0.894    | 0.929    | 0.918    |
 | Our Replicate | 0.872599 | 0.895767 | 0.936370 | 0.918152 |
 
-Below are comparisons of each protected attribute distribution of the predicted FYA. 
+Below is a comparisons of each protected attribute distribution of the predicted FYA for the Fair Add model. 
 ![Fair Add Model Distribution](figures/fairadd_train_dist.png)
 
 
