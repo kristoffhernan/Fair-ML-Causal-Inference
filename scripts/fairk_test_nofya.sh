@@ -18,6 +18,7 @@
 ###################
 # Command(s) to run
 ###################
+pip install seaborn
 
 module load python
 

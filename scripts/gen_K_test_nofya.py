@@ -21,8 +21,9 @@ import pyro.distributions as dist
 from pyro.nn import PyroModule
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
+import seaborn as sns
 
-from utils import FairKModelTest2
+from utils import FairKModel2
 
 
 # In[2]:
@@ -141,17 +142,13 @@ test_tensor = torch.tensor(test_trans.values, dtype=torch.float32)
 
 # In[20]:
 
-with open(os.path.join(data_dir,'inferred_K_train_100.pkl'), 'rb') as f:
-  inferred_K_train = pickle.load(f)
-reestimated_params = inferred_K_train['parameters']
-
 
 K_list_test = []
 metrics_test = {'ESS_values':[], 'normalized_weights':[]}
 
 for i in tqdm(range(test_tensor.shape[0])):
         # P(GPA,LSAT,FYA∣K,Race,Sex), so gpa, lsat and fya conditioned on observed data from train_tensor
-        conditioned_model = pyro.condition(FairKModelTest2, data={
+        conditioned_model = pyro.condition(FairKModel2, data={
                 'gpa': test_tensor[i, 1], 
                 'lsat': test_tensor[i, 0].type(torch.int32), 
                 }
@@ -161,7 +158,7 @@ for i in tqdm(range(test_tensor.shape[0])):
         importance = pyro.infer.Importance(conditioned_model, num_samples=100)
 
         # executes the mcmc process
-        sampling_results = importance.run(R=test_tensor[:,5:], S=test_tensor[:,3:5], num_observations=test_tensor.shape[0], reestimated_params=reestimated_params) # samples from P_M(U | x^{(i)}, a^{(i)})
+        sampling_results = importance.run(R=test_tensor[:,5:], S=test_tensor[:,3:5], num_observations=test_tensor.shape[0], law_data=law_data) # samples from P_M(U | x^{(i)}, a^{(i)})
                 
         # obtains distribution of sampled values for K
         marginal = pyro.infer.EmpiricalMarginal(importance, sites="K")
@@ -171,6 +168,6 @@ for i in tqdm(range(test_tensor.shape[0])):
         metrics_test['ESS_values'].append(importance.get_ESS())
         metrics_test['normalized_weights'].append(importance.get_normalized_weights())
 
-with open(os.path.join(data_dir,'inferred_K_test_100_nofy.pkl'), 'wb') as f:
+with open(os.path.join(data_dir,'inferred_K_test_100_nofya_noest.pkl'), 'wb') as f:
     pickle.dump({'K_values': K_list_test, 'metrics': metrics_test}, f)
 
